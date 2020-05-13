@@ -4,6 +4,8 @@ Este proyecto es una prueba de concepto de desarrollo en docker. La idea
 es tener un imagen docker común de la que partir y añadir las capas necesarias
 que necesite cada proyecto.
 
+Las mejoras se pueden extender facilmente a todas las imágenes. En lugar de recorrer cada imagen de cada proyecto.
+
 ## Incluye
 
 * git
