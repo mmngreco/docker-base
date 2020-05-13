@@ -13,9 +13,10 @@ ENV LANG=C.UTF-8
 
 # DB CONFIGURATION
 RUN mkdir -p /ETS/git \
+    && mkdir -p ~/.ssh \
+    && chmod 0700 ~/.ssh \
     && mkdir -p /ETS/configs \
-    && mkdir -p /ETS/venvs \
-    && echo "$CONFIG_INI" > /ETS/configs/config.ini
+    && mkdir -p /ETS/venvs
 
 RUN rm /var/lib/apt/lists/* -vf \
     # Base dependencies
@@ -49,13 +50,16 @@ RUN rm /var/lib/apt/lists/* -vf \
         vim \
         wget \
         xz-utils \
-        zlib1g-dev \
-        $APT_LIST \
+        zlib1g-dev
+
+COPY bashrc /root/.bashrc
+
+ENV PYENV_ROOT=/root/.pyenv
+ENV PATH="$PYENV_ROOT/bin:$PATH"
+RUN echo =========================================================== \
     # Pyenv Installation
-    && echo =========================================================== \
     && echo pyenv installation \
     && curl https://pyenv.run | bash \
-    && echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
     && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
     && echo 'if command -v pyenv 1>/dev/null 2>&1; then' >> ~/.bashrc \
     && echo '    eval "$(pyenv init -)"' >> ~/.bashrc \
@@ -63,11 +67,6 @@ RUN rm /var/lib/apt/lists/* -vf \
     && . ~/.bashrc \
     && pyenv install -f 3.6.10 \
     && echo "pyenv global 3.6.10" >> ~/.bashrc \
-    # Cleanup
-    && echo =========================================================== \
-    && echo cleanup \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     # freetds driver
     && echo =========================================================== \
     && echo freetds drivers \
@@ -76,30 +75,16 @@ RUN rm /var/lib/apt/lists/* -vf \
     && echo "Driver = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so" >> /etc/odbcinst.ini \
     && echo "Setup = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so" >> /etc/odbcinst.ini
 
-RUN echo add identity \
-    && echo =========================================================== \
+RUN echo =========================================================== \
+    && echo add identity \
     && echo SSH SETUP \
     # https://stackoverflow.com/a/37779390/3124367?stw=2
     && $(which ssh-agent) \
-    && mkdir -p /root/.ssh \
-    && chmod 0700 /root/.ssh \
     # Authorize SSH Host
     && echo =========================================================== \
     && echo AUTHORIZE SSH HOST \
-    && ssh-keyscan -H etsgit1.ets.es >> /root/.ssh/known_hosts \
-    && ssh-keyscan -H etsgit1 >> /root/.ssh/known_hosts \
-    # Create key files
-    && echo =========================================================== \
-    && echo CREATE KEY FILES \
-    && echo SSH PRIVATE KEY \
-    && echo "$SSH_PRIVATE_KEY" | tr -d '\r' \
-    && echo SSH PUBLIC KEY \
-    && echo "$SSH_PUBLIC_KEY" | tr -d '\r' \
-    && echo TEMPORAL STORING SSH KEYS \
-    && echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa \
-    && echo "$SSH_PUBLIC_KEY" | tr -d '\r' > ~/.ssh/id_rsa.pub \
-    && chmod 600 /root/.ssh/id_rsa \
-    && chmod 600 /root/.ssh/id_rsa.pub \
+    && ssh-keyscan -H etsgit1.ets.es >> ~/.ssh/known_hosts \
+    && ssh-keyscan -H etsgit1 >> ~/.ssh/known_hosts \
     # Add identity
     && echo =========================================================== \
     && echo ADD IDENTITY \
@@ -110,18 +95,20 @@ RUN echo add identity \
     && echo TEST SSH CONNECTION \
     && ssh -v -T git@etsgit1.ets.es
 
-RUN echo "echo \"\$SSH_PRIVATE_KEY\" | tr -d \'\r\' > ~/.ssh/id_rsa" >> /root/.bashrc \
-    && echo "echo \"\$SSH_PUBLIC_KEY\" | tr -d \'\r\' > ~/.ssh/id_rsa.pub" >> /root/.bashrc \
-    && echo "chmod 600 /root/.ssh/id_rsa" >> /root/.bashrc \
-    && echo "chmod 600 /root/.ssh/id_rsa.pub" >> /root/.bashrc \
-    && echo "[ ! -z \"\$CONFIG_INI\" ] && echo \"\$CONFIG_INI\" > /ETS/configs/config.ini" >> /root/.bashrc
+RUN apt-get -y --force-yes install $APT_LIST
+
+# Cleanup
+RUN echo =========================================================== \
+    && echo cleanup \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Clean SSH KEYS
 ENV SSH_PRIVATE_KEY=
 ENV SSH_PUBLIC_KEY=
 RUN rm ~/.ssh/id_rsa*
+ENV PATH="/root/.pyenv/shims/:$PATH"
 
 WORKDIR /ETS/git
-
 
 CMD ["/bin/bash"]
