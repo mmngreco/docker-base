@@ -65,7 +65,7 @@ RUN echo =========================================================== \
     && echo '    eval "$(pyenv init -)"' >> ~/.bashrc \
     && echo 'fi' >> ~/.bashrc \
     && . ~/.bashrc \
-    && pyenv install -f 3.6.10 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.6.10 \
     && echo "pyenv global 3.6.10" >> ~/.bashrc \
     # freetds driver
     && echo =========================================================== \
@@ -111,4 +111,5 @@ ENV PATH="/root/.pyenv/shims/:$PATH"
 
 WORKDIR /ETS/git
 
+ENTRYPOINT /bin/bash
 CMD ["/bin/bash"]
