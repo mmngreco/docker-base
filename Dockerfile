@@ -1,5 +1,6 @@
-FROM osixia/ubuntu-light-baseimage:0.2.1
-
+# FROM osixia/ubuntu-light-baseimage:0.2.1
+FROM debian:buster-slim
+ENV DEBIAN_FRONTEND=noninteractive
 ARG SSH_PRIVATE_KEY
 ARG SSH_PUBLIC_KEY
 ARG APT_LIST
@@ -10,6 +11,7 @@ ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
 ENV PYMO_USE_CACHE=0
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
+ENV PY_VER=3.6.10
 
 # DB CONFIGURATION
 RUN mkdir -p /ETS/git \
@@ -55,7 +57,7 @@ RUN rm /var/lib/apt/lists/* -vf \
 COPY bashrc /root/.bashrc
 
 ENV PYENV_ROOT=/root/.pyenv
-ENV PATH="$PYENV_ROOT/bin:$PATH"
+ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
 RUN echo =========================================================== \
     # Pyenv Installation
     && echo pyenv installation \
@@ -65,8 +67,10 @@ RUN echo =========================================================== \
     && echo '    eval "$(pyenv init -)"' >> ~/.bashrc \
     && echo 'fi' >> ~/.bashrc \
     && . ~/.bashrc \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.6.10 \
-    && echo "pyenv global 3.6.10" >> ~/.bashrc \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER \
+    # && pyenv rehash \
+    && pyenv global $PY_VER \
+    && echo "pyenv global $PY_VER" >> ~/.bashrc \
     # freetds driver
     && echo =========================================================== \
     && echo freetds drivers \
@@ -103,13 +107,18 @@ RUN echo =========================================================== \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+
 # Clean SSH KEYS
 ENV SSH_PRIVATE_KEY=
 ENV SSH_PUBLIC_KEY=
 RUN rm ~/.ssh/id_rsa*
-ENV PATH="/root/.pyenv/shims/:$PATH"
+
+# Add Tini
+# https://stackoverflow.com/questions/49162358/docker-init-zombies-why-does-it-matter
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
 WORKDIR /ETS/git
-
-ENTRYPOINT /bin/bash
 CMD ["/bin/bash"]
