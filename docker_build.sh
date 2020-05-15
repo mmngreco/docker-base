@@ -14,5 +14,6 @@ docker build \
     --build-arg SSH_PUBLIC_KEY="$SSH_PUBLIC_KEY" \
     --build-arg CONFIG_INI="$CONFIG_INI" \
     --build-arg APT_LIST="$APT_LIST" \
-    -t "$IMAGE_NAME" -t base \
+    --tag "$IMAGE_NAME" \
+    --tag base \
     .

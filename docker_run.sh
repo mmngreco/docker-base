@@ -15,4 +15,6 @@ docker run \
     --env CONFIG_INI="$CONFIG_INI" \
     --name $CONTAINER_NAME \
     --volume $(pwd):/ETS/git/$(basename $PWD) \
-    -it $IMAGE_NAME
+    --interactive \
+    --tty \
+    $IMAGE_NAME

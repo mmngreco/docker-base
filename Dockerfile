@@ -1,17 +1,13 @@
-# FROM osixia/ubuntu-light-baseimage:0.2.1
 FROM debian:buster-slim
 ENV DEBIAN_FRONTEND=noninteractive
+
 ARG SSH_PRIVATE_KEY
 ARG SSH_PUBLIC_KEY
 ARG APT_LIST
 ARG CONFIG_INI
 
-ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
-ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
-ENV PYMO_USE_CACHE=0
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ENV PY_VER=3.6.10
 
 # DB CONFIGURATION
 RUN mkdir -p /ETS/git \
@@ -56,6 +52,7 @@ RUN rm /var/lib/apt/lists/* -vf \
 
 COPY bashrc /root/.bashrc
 
+ENV PY_VER=3.6.10
 ENV PYENV_ROOT=/root/.pyenv
 ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
 RUN echo =========================================================== \
@@ -70,6 +67,7 @@ RUN echo =========================================================== \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER \
     # && pyenv rehash \
     && pyenv global $PY_VER \
+    && pip install pip==18.* --upgrade \
     && echo "pyenv global $PY_VER" >> ~/.bashrc \
     # freetds driver
     && echo =========================================================== \
@@ -79,6 +77,8 @@ RUN echo =========================================================== \
     && echo "Driver = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so" >> /etc/odbcinst.ini \
     && echo "Setup = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so" >> /etc/odbcinst.ini
 
+ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
+ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
 RUN echo =========================================================== \
     && echo add identity \
     && echo SSH SETUP \
