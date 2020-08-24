@@ -5,6 +5,7 @@ ARG SSH_PRIVATE_KEY
 ARG SSH_PUBLIC_KEY
 ARG APT_LIST
 ARG CONFIG_INI
+ARG PY_VER
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
@@ -52,7 +53,6 @@ RUN rm /var/lib/apt/lists/* -vf \
 
 COPY bashrc /root/.bashrc
 
-ENV PY_VER=3.6.10
 ENV PYENV_ROOT=/root/.pyenv
 ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
 RUN echo =========================================================== \
