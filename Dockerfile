@@ -38,6 +38,7 @@ RUN rm /var/lib/apt/lists/* -vf \
         libreadline-dev \
         libsqlite3-dev \
         libssl-dev \
+        libffi-dev \
         make \
         net-tools \
         openssh-client \
@@ -52,30 +53,24 @@ RUN rm /var/lib/apt/lists/* -vf \
         zlib1g-dev
 
 COPY bashrc /root/.bashrc
+COPY etc/odbcinst.ini /etc/odbcinst.ini
 
-ENV PYENV_ROOT=/root/.pyenv
-ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
 RUN echo =========================================================== \
     # Pyenv Installation
     && echo pyenv installation \
     && curl https://pyenv.run | bash \
-    && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
-    && echo 'if command -v pyenv 1>/dev/null 2>&1; then' >> ~/.bashrc \
-    && echo '    eval "$(pyenv init -)"' >> ~/.bashrc \
-    && echo 'fi' >> ~/.bashrc \
     && . ~/.bashrc \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER \
-    # && pyenv rehash \
-    && pyenv global $PY_VER \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.5.10 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.6.13 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.7.10 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.8.8 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.9.2 \
+    && pyenv rehash \
+    && pyenv local 3.5.10 3.6.13 3.7.10 3.8.8 3.9.2 \
     && pip install pip==18.* --upgrade \
-    && echo "pyenv global $PY_VER" >> ~/.bashrc \
-    # freetds driver
-    && echo =========================================================== \
-    && echo freetds drivers \
-    && echo "[FreeTDS]" > /etc/odbcinst.ini \
-    && echo "Description = TDS driver (Sybase/MS SQL)" >> /etc/odbcinst.ini \
-    && echo "Driver = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so" >> /etc/odbcinst.ini \
-    && echo "Setup = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so" >> /etc/odbcinst.ini
+    && echo "pyenv global $PY_VER\n\n" >> ~/.bashrc
+
 
 ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
 ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY

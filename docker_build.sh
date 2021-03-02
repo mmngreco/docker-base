@@ -11,5 +11,4 @@ docker build \
     --tag "$IMAGE_NAME" \
     --tag base \
     --squash \
-    --no-cache \
     .
