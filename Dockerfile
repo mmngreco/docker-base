@@ -113,7 +113,8 @@ RUN rm ~/.ssh/id_rsa*
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
 RUN chmod +x /usr/bin/tini
-ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
 WORKDIR /ETS/git
-CMD ["/bin/bash"]
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
+CMD /bin/bash -c "source ~/.bashrc"
