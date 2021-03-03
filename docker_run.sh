@@ -10,8 +10,8 @@ docker run \
     --env SSH_PUBLIC_KEY="$SSH_PUBLIC_KEY" \
     --env SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" \
     --env CONFIG_INI="$CONFIG_INI" \
-    --name $CONTAINER_NAME \
     --volume $(pwd):/ETS/git/$(basename $DIR) \
+    --name $CONTAINER_NAME \
     --interactive \
     --tty \
     $IMAGE_NAME

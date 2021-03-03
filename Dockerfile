@@ -1,5 +1,7 @@
 FROM debian:buster-slim
 ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/root
+SHELL [ "/bin/bash", "-c" ]
 
 ARG SSH_PRIVATE_KEY
 ARG SSH_PUBLIC_KEY
@@ -54,26 +56,31 @@ RUN rm /var/lib/apt/lists/* -vf \
 
 COPY bashrc /root/.bashrc
 COPY etc/odbcinst.ini /etc/odbcinst.ini
+ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
+ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
+ENV PYENV_ROOT="/opt/pyenv"
+ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
 
 RUN echo =========================================================== \
     # Pyenv Installation
     && echo pyenv installation \
-    && curl https://pyenv.run | bash \
-    && . ~/.bashrc \
+    && git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT \
+    && pushd $PYENV_ROOT && src/configure && make -C src && popd \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.5.10 \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.6.13 \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.7.10 \
     && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.8.8 \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.9.2 \
+    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.9.2
+
+RUN echo =========================================================== \
+    && . /root/.bashrc \
     && pyenv rehash \
     && pyenv local 3.5.10 3.6.13 3.7.10 3.8.8 3.9.2 \
-    && pip install pip==18.* --upgrade \
-    && echo "pyenv global $PY_VER\n\n" >> ~/.bashrc
+    && pyenv global $PY_VER \
+    && pip install pip==18.* setuptools wheel --upgrade \
+    && echo "pyenv global $PY_VER" >> /root/.bashrc
 
-
-ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
-ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
 RUN echo =========================================================== \
     && echo add identity \
     && echo SSH SETUP \
@@ -102,7 +109,6 @@ RUN echo =========================================================== \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-
 # Clean SSH KEYS
 ENV SSH_PRIVATE_KEY=
 ENV SSH_PUBLIC_KEY=
@@ -115,6 +121,5 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/bin/tini
 
 WORKDIR /ETS/git
-SHELL ["/bin/bash", "-c"]
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
-CMD /bin/bash -c "source ~/.bashrc"
+CMD [ "/bin/bash" ]
