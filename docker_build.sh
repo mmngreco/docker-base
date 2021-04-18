@@ -9,6 +9,5 @@ docker build \
     --build-arg APT_LIST="$APT_LIST" \
     --build-arg PY_VER="$PY_VER" \
     --tag "$IMAGE_NAME" \
-    --tag base \
     --squash \
     .

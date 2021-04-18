@@ -1,4 +1,5 @@
 FROM debian:buster-slim
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV HOME=/root
 SHELL [ "/bin/bash", "-c" ]
@@ -13,11 +14,7 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 # DB CONFIGURATION
-RUN mkdir -p /ETS/git \
-    && mkdir -p ~/.ssh \
-    && chmod 0700 ~/.ssh \
-    && mkdir -p /ETS/configs \
-    && mkdir -p /ETS/venvs
+RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
 
 RUN rm /var/lib/apt/lists/* -vf \
     # Base dependencies
@@ -60,25 +57,23 @@ ENV SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
 ENV SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY
 ENV PYENV_ROOT="/opt/pyenv"
 ENV PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
+COPY python_versions /root/.python_versions
 
 RUN echo =========================================================== \
     # Pyenv Installation
     && echo pyenv installation \
     && git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT \
     && pushd $PYENV_ROOT && src/configure && make -C src && popd \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.5.10 \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.6.13 \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.7.10 \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.8.8 \
-    && env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.9.2
+    && for PY_VER in $(cat /root/.python_versions); do env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f $PY_VER; done
 
 RUN echo =========================================================== \
     && . /root/.bashrc \
     && pyenv rehash \
-    && pyenv local 3.5.10 3.6.13 3.7.10 3.8.8 3.9.2 \
-    && pyenv global $PY_VER \
-    && pip install pip==18.* setuptools wheel --upgrade \
+    && export PY_VER="$(head -1 /root/.python_versions)" \
+    && pyenv local $(cat /root/.python_versions)
+
+RUN pyenv global $PY_VER \
+    && pip install pip setuptools wheel --upgrade \
     && echo "pyenv global $PY_VER" >> /root/.bashrc
 
 RUN echo =========================================================== \
@@ -89,17 +84,16 @@ RUN echo =========================================================== \
     # Authorize SSH Host
     && echo =========================================================== \
     && echo AUTHORIZE SSH HOST \
-    && ssh-keyscan -H etsgit1.ets.es >> ~/.ssh/known_hosts \
-    && ssh-keyscan -H etsgit1 >> ~/.ssh/known_hosts \
+    && ssh-keyscan -H github.com >> ~/.ssh/known_hosts \
     # Add identity
     && echo =========================================================== \
     && echo ADD IDENTITY \
     && eval $(ssh-agent) \
-    && ssh-add \
+    && ssh-add
     # Test ssh connection
-    && echo =========================================================== \
-    && echo TEST SSH CONNECTION \
-    && ssh -v -T git@etsgit1.ets.es
+    # && echo =========================================================== \
+    # && echo TEST SSH CONNECTION
+    # && ssh -T git@github.com
 
 RUN apt-get -y --force-yes install $APT_LIST
 
@@ -120,6 +114,5 @@ ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
 RUN chmod +x /usr/bin/tini
 
-WORKDIR /ETS/git
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
