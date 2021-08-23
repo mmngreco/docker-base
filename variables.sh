@@ -1,4 +1,4 @@
-PY_VER="3.6.13"
+PY_VER="3.6.14"
 TAG="0.2.0-allpython-debian"
 IMAGE_NAME="docker-base:$TAG"
 SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
