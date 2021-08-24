@@ -27,6 +27,7 @@ software-properties-common
 supervisor
 tdsodbc
 tmux
+keepassxc
 unixodbc
 unixodbc-dev
 wget

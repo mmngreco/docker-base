@@ -24,7 +24,7 @@ case $1 in
         echo "    zsh"
         ;;
     *)
-        bash -i
+        zsh -i
         ;;
 esac
 

@@ -37,6 +37,14 @@ RUN mkdir -p /opt/nvim/ && cd /opt/nvim \
 
 # oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN sh -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
+
+# gh cli
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg  \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt update \
+    && apt install gh
+
 
 # dotfiles
 ENV DOTFILES="/root/.dotfiles"
@@ -46,12 +54,11 @@ RUN git clone --recurse-submodules --depth 1 \
 
 
 RUN sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-# RUN nvim -es -u $DOTFILES/vim/init.vim -i NONE -c "PlugInstall" -c "qa"
-# Install Neovim extensions.
 RUN nvim --headless +PlugInstall +qall
 
 # source bashrc
 RUN echo "source /root/.bashrc" >> /etc/profile
+
 
 # Cleanup
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -64,4 +71,7 @@ RUN chmod +x /usr/bin/tini
 
 COPY ./entrypoint.sh /
 ENTRYPOINT [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
-CMD [ "/bin/bash", " -i" ]
+
+RUN chsh -s $(which zsh) $USERNAME
+
+CMD [ "/bin/zsh", " -i" ]
