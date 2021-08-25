@@ -55,14 +55,12 @@ ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
 RUN chmod +x /usr/bin/tini
 
-# User config
-
-RUN useradd -m -u 1000 -s /bin/zsh $UNAME
+# Create user and config
+RUN useradd -m -u 1000 -s /bin/zsh $UNAME -G sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN sudo chown -R $UNAME:$UNAME /home/$UNAME
 USER $UNAME
 WORKDIR /home/$UNAME
-# RUN chsh -s $(which zsh) $USERNAME
 
 # oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
