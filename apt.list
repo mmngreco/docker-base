@@ -1,4 +1,5 @@
 ack
+sudo
 silversearcher-ag
 apt-utils
 gawk

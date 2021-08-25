@@ -2,10 +2,13 @@ ARG IMAGE_BASE=python:3.6
 FROM $IMAGE_BASE
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV HOME=/root
 ENV IS_DOCKER=1
+
+ARG UNAME=docker
+ENV HOME=/home/$UNAME
 ARG UID=1000
 ARG GID=1000
+
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -28,6 +31,15 @@ RUN rm /var/lib/apt/lists/* -vf \
     && apt-get -y dist-upgrade \
     && apt-get -y --force-yes install --fix-missing $APT_LIST
 
+# gh cli
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg  \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt update \
+    && apt install gh
+
+# Cleanup
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # installing nvim
 RUN mkdir -p /opt/nvim/ && cd /opt/nvim \
     && curl -LO https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage \
@@ -35,43 +47,36 @@ RUN mkdir -p /opt/nvim/ && cd /opt/nvim \
     && ./nvim.appimage --appimage-extract \
     && ln -sf /opt/nvim/squashfs-root/usr/bin/nvim /usr/bin/nvim
 
-# oh-my-zsh
-RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-RUN sh -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
-
-# gh cli
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg  \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt update \
-    && apt install gh
-
-
-# dotfiles
-ENV DOTFILES="/root/.dotfiles"
-RUN git clone --recurse-submodules --depth 1 \
-        https://github.com/mmngreco/dotfiles $DOTFILES \
-    && $DOTFILES/install
-
-
-RUN sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-RUN nvim --headless +PlugInstall +qall
-
-# source bashrc
-RUN echo "source /root/.bashrc" >> /etc/profile
-
-
-# Cleanup
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 # Add Tini
 # https://stackoverflow.com/questions/49162358/docker-init-zombies-why-does-it-matter
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
 RUN chmod +x /usr/bin/tini
 
+# User config
+RUN groupadd -g $GID -o $UNAME
+RUN useradd -m -u $UID -g $GID -G sudo -o -s /bin/zsh $UNAME
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# RUN chown -R $UNAME:$UNAME /home/$UNAME /etc /opt /var
+RUN sudo chown -R $UNAME:$UNAME /home/$UNAME
+USER $UNAME
+WORKDIR /home/$UNAME
+# RUN chsh -s $(which zsh) $USERNAME
+
+# oh-my-zsh
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN sh -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
+
+# dotfiles
+ENV DOTFILES="$HOME/.dotfiles"
+RUN git clone --recurse-submodules --depth 1 https://github.com/mmngreco/dotfiles $DOTFILES && $DOTFILES/install
+RUN sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+RUN nvim --headless +PlugInstall +qall
+
+# source bashrc
+# RUN echo "source /root/.bashrc" >> /etc/profile
+
 COPY ./entrypoint.sh /
 ENTRYPOINT [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
-
-RUN chsh -s $(which zsh) $USERNAME
 
 CMD [ "/bin/zsh", " -i" ]

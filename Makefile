@@ -11,9 +11,9 @@ APT_LIST = $(shell cat apt.list)
 
 # run
 DIR = ${PWD}
-BASENAME = "-$(shell basename ${DIR})"
-UUID = "-$(shell uuidgen)"
-CONTAINER_NAME = mmngreco${BASENAME}${UUID:0:7}
+BASENAME = -$(shell basename ${DIR})
+UUID = -$(shell uuidgen)
+CONTAINER_NAME = $(shell echo mmngreco${BASENAME}${UUID:0:7})
 
 
 all: build run push
@@ -29,7 +29,6 @@ build:
 			.
 
 run:
-		echo uuid es : ${UUID}
 		docker run \
 			--env UID="${UID}" \
 			--env GID="${GID}" \
