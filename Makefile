@@ -20,8 +20,6 @@ all: build run push
 
 build:
 		docker build \
-			--build-arg UID="${UID}" \
-			--build-arg GID="${GID}" \
 			--build-arg IMAGE_BASE="${IMAGE_BASE}" \
 			--build-arg APT_LIST="${APT_LIST}" \
 			--tag "${IMAGE_NAME}" \
@@ -30,11 +28,11 @@ build:
 
 run:
 		docker run \
-			--env UID="${UID}" \
-			--env GID="${GID}" \
-			--volume "$(shell pwd):/git/$(shell basename ${DIR})" \
+			--user $(shell id -u):$(shell id -g) \
+			--volume "$(shell pwd):/home/docker/$(shell basename ${DIR})" \
 			--volume "${DOTFILES}:/root/.dotfiles" \
 			--volume "${HOME}/.ssh:/root/.ssh/" \
+			--workdir "/home/docker/$(shell basename ${DIR})" \
 			--name ${CONTAINER_NAME} \
 			--interactive \
 			--tty \

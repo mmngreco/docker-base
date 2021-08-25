@@ -10,8 +10,6 @@ ENV LC_ALL=en_US.UTF-8
 
 ARG UNAME=docker
 ENV HOME=/home/$UNAME
-ARG UID=1000
-ARG GID=1000
 
 
 SHELL [ "/bin/bash", "-c" ]
@@ -58,10 +56,9 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/bin/tini
 
 # User config
-RUN groupadd -g $GID -o $UNAME
-RUN useradd -m -u $UID -g $GID -G sudo -o -s /bin/zsh $UNAME
+
+RUN useradd -m -u 1000 -s /bin/zsh $UNAME
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-# RUN chown -R $UNAME:$UNAME /home/$UNAME /etc /opt /var
 RUN sudo chown -R $UNAME:$UNAME /home/$UNAME
 USER $UNAME
 WORKDIR /home/$UNAME
