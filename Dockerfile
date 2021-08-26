@@ -8,9 +8,10 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-ARG UNAME=docker
-ENV HOME=/home/$UNAME
-
+ENV USERNAME=docker
+ENV HOME=/home/$USERNAME
+ARG UID=1000
+ARG GID=1000
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -56,17 +57,18 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/
 RUN chmod +x /usr/bin/tini
 
 # Create user and config
-RUN useradd -m -u 1000 -s /bin/zsh $UNAME -G sudo
+RUN groupadd -f -g $GID $USERNAME
+RUN useradd -m --uid $UID --gid $GID -G sudo -s /bin/zsh $USERNAME
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-RUN sudo chown -R $UNAME:$UNAME /home/$UNAME
-USER $UNAME
-WORKDIR /home/$UNAME
+RUN chown -R $USERNAME:$USERNAME /home/$USERNAME
+USER $USERNAME
+WORKDIR /home/$USERNAME
 
-# oh-my-zsh
+# oh-my-zsh config
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 RUN sh -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 
-# dotfiles
+# my dotfiles
 ENV DOTFILES="$HOME/.dotfiles"
 RUN git clone --recurse-submodules --depth 1 https://github.com/mmngreco/dotfiles $DOTFILES && $DOTFILES/install
 RUN sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
