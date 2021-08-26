@@ -12,6 +12,7 @@ freetds-dev
 fzf
 git
 gnupg
+gnupg2
 libbz2-dev
 libffi-dev
 libfontconfig
@@ -35,3 +36,4 @@ wget
 xz-utils
 zlib1g-dev
 zsh
+xclip

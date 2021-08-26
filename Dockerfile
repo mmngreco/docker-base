@@ -4,10 +4,6 @@ FROM $IMAGE_BASE
 ENV DEBIAN_FRONTEND=noninteractive
 ENV IS_DOCKER=1
 
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
-
 ENV USERNAME=docker
 ENV HOME=/home/$USERNAME
 ARG UID=1000
@@ -24,11 +20,12 @@ ENV LANG=C.UTF-8
 RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
 
 # git secret
+RUN apt update -y && apt install -y gnupg2 wget
 RUN echo 'deb https://gitsecret.jfrog.io/artifactory/git-secret-deb git-secret main' >> /etc/apt/sources.list \
     && wget -qO - 'https://gitsecret.jfrog.io/artifactory/api/gpg/key/public' | apt-key add -
 
 ARG APT_LIST
-RUN rm /var/lib/apt/lists/* -vf \
+RUN rm -rvf /var/lib/apt/lists/* \
     # Base dependencies
     && apt-get -y update \
     && apt-get -y dist-upgrade \

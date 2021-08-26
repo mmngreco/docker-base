@@ -5,7 +5,8 @@
 
 # build only
 TAG = 0.3.0
-IMAGE_BASE = "python:3.6"
+
+IMAGE_BASE = "continuumio/miniconda3:4.10.3"
 IMAGE_NAME = mmngreco
 APT_LIST = $(shell cat ./apt.list)
 
