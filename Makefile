@@ -22,10 +22,10 @@ all: build run push
 build:
 		docker build \
 			--build-arg USERID=$(shell id -u):$(shell id -g) \
-			--build-arg IMAGE_BASE="${IMAGE_BASE}" \
-			--build-arg APT_LIST="${APT_LIST}" \
-			--tag "${IMAGE_NAME}:${TAG}" \
-			--tag "${IMAGE_NAME}:latest" \
+			--build-arg IMAGE_BASE="$(IMAGE_BASE)" \
+			--build-arg APT_LIST="$(APT_LIST)" \
+			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ ):$(TAG)" \
+			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ ):latest" \
 			--squash \
 			.
 

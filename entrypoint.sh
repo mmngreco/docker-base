@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 source ~/.bashrc
-dotfiles pull
-
-# usermod -u "${UID}" root
-# groupmod -g "${GID}" root
 
 case $1 in
     install)

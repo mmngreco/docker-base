@@ -17,6 +17,7 @@ COPY etc/odbcinst.ini /etc/odbcinst.ini
 RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
 
 # git secret
+RUN rm -rvf /var/lib/apt/lists/*
 RUN apt update \
     && apt install -y gnupg2 wget \
     && echo 'deb https://gitsecret.jfrog.io/artifactory/git-secret-deb git-secret main' >> /etc/apt/sources.list \
@@ -25,10 +26,7 @@ RUN apt update \
     && apt install -y git-secret
 
 ARG APT_LIST
-RUN rm -rvf /var/lib/apt/lists/* \
-    # Base dependencies
-    && apt-get -y update \
-    && apt-get -y dist-upgrade \
+RUN apt-get -y dist-upgrade \
     && apt-get -y --force-yes install --fix-missing $APT_LIST
 
 # gh cli
