@@ -17,9 +17,11 @@ COPY etc/odbcinst.ini /etc/odbcinst.ini
 RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
 
 # git secret
-RUN apt update -y && apt install -y gnupg2 wget
 RUN echo 'deb https://gitsecret.jfrog.io/artifactory/git-secret-deb git-secret main' >> /etc/apt/sources.list \
-    && wget -qO - 'https://gitsecret.jfrog.io/artifactory/api/gpg/key/public' | apt-key add -
+    && wget -qO - 'https://gitsecret.jfrog.io/artifactory/api/gpg/key/public' \
+    | apt-key add - \
+    && apt update -y \
+    && apt install -y gnupg2 wget git-secret
 
 ARG APT_LIST
 RUN rm -rvf /var/lib/apt/lists/* \
