@@ -13,9 +13,6 @@ SHELL [ "/bin/bash", "-c" ]
 
 COPY etc/odbcinst.ini /etc/odbcinst.ini
 
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-
 # DB CONFIGURATION
 RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
 
