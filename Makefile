@@ -34,7 +34,7 @@ run:
 			--user $(shell id -u):$(shell id -g) \
 			--volume "$(shell pwd):/home/${USERNAME}/$(shell basename ${DIR})" \
 			--volume "${DOTFILES}:/${USERNAME}/.dotfiles" \
-			--volume "${HOME}/.ssh:/root/.ssh/" \
+			--volume "${HOME}/.ssh:/home/${USERNAME}/.ssh/" \
 			--workdir "/home/${USERNAME}/$(shell basename ${DIR})" \
 			--name ${CONTAINER_NAME} \
 			--interactive \
