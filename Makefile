@@ -1,13 +1,13 @@
 .PHONY: all build run push clean
 
-# How to enable experimental mode (squash)
+# NOTE: How to enable experimental mode for --squash option
 # https://github.com/docker/cli/blob/master/experimental/README.md#use-docker-experimental
-
-# build only
-TAG = 0.3.0
 
 IMAGE_BASE = "continuumio/miniconda3:4.10.3"
 IMAGE_NAME = mmngreco
+
+# build only
+TAG = $(shell git describe --tags)
 APT_LIST = $(shell cat ./apt.list)
 
 # run only
@@ -24,6 +24,7 @@ build:
 			--build-arg USERID=$(shell id -u):$(shell id -g) \
 			--build-arg IMAGE_BASE="$(IMAGE_BASE)" \
 			--build-arg APT_LIST="$(APT_LIST)" \
+			--tag "$(IMAGE_NAME):$(TAG)" \
 			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ | tr / -):$(TAG)" \
 			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ | tr / -):latest" \
 			--squash \
@@ -38,7 +39,7 @@ run:
 			--workdir "/home/$(USERNAME)/$(shell basename ${DIR})" \
 			--interactive \
 			--tty \
-			$(IMAGE_NAME)
+			$(IMAGE_NAME):$(TAG)
 
 push:
 		docker push $(IMAGE_NAME)
