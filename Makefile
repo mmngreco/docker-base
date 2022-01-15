@@ -20,10 +20,11 @@ CONTAINER_NAME = $(shell echo mmngreco${BASENAME}${UUID:0:7})
 all: build run push
 
 build:
-		docker build \
+	docker build \
 			--build-arg USERID=$(shell id -u):$(shell id -g) \
 			--build-arg IMAGE_BASE="$(IMAGE_BASE)" \
 			--build-arg APT_LIST="$(APT_LIST)" \
+			--tag "mmngreco/dev:$(TAG)" \
 			--tag "$(IMAGE_NAME):$(TAG)" \
 			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ | tr / -):$(TAG)" \
 			--tag "$(IMAGE_NAME)-$(shell echo $(IMAGE_BASE) | tr : _ | tr / -):latest" \
@@ -31,7 +32,7 @@ build:
 			.
 
 run:
-		docker run \
+	docker run \
 			--user $(shell id -u):$(shell id -g) \
 			--volume "$(DIR):/home/$(USERNAME)/$(shell basename ${DIR})" \
 			--volume "$(DOTFILES):/home/$(USERNAME)/.dotfiles" \
@@ -42,17 +43,17 @@ run:
 			$(IMAGE_NAME):$(TAG)
 
 push:
-		docker push $(IMAGE_NAME)
+	docker push "mmngreco/dev:$(TAG)"
 
 clean:
-		docker system prune --all -f
+	docker system prune --all -f
 
 fix:
-		# Fix network/connection problems
-		# see https://serverfault.com/a/642984/573706
-		# apt-get install bridge-utils
-		pkill docker
-		iptables -t nat -F
-		ifconfig docker0 down
-		brctl delbr docker0
-		service docker restart
+	# Fix network/connection problems
+	# see https://serverfault.com/a/642984/573706
+	# apt-get install bridge-utils
+	pkill docker
+	iptables -t nat -F
+	ifconfig docker0 down
+	brctl delbr docker0
+	service docker restart
