@@ -1,17 +1,17 @@
-ARG IMAGE_BASE=python:3.6
-FROM $IMAGE_BASE
+ARG IMAGE_BASE=python:3.9
+FROM ${IMAGE_BASE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV IS_DOCKER=1
-
 ENV USERNAME=docker
-ENV HOME=/home/$USERNAME
+ENV HOME=/home/${USERNAME}
+ENV PATH=${PATH}:${HOME}/.local/bin
 ARG UID=1000
 ARG GID=1000
 
 SHELL [ "/bin/bash", "-c" ]
 
-COPY etc/odbcinst.ini /etc/odbcinst.ini
+COPY ./etc/odbcinst.ini /etc/odbcinst.ini
 
 # DB CONFIGURATION
 RUN mkdir -p ~/.ssh && chmod 0700 ~/.ssh
@@ -26,7 +26,8 @@ RUN apt update \
     && apt install -y git-secret
 
 ARG APT_LIST
-RUN apt-get -y dist-upgrade && apt-get -y --force-yes install --fix-missing $APT_LIST
+RUN apt-get -y dist-upgrade \
+    && apt-get -y --force-yes install --fix-missing $APT_LIST
 
 
 # Add Tini
@@ -37,20 +38,30 @@ RUN chmod +x /usr/bin/tini
 
 
 # Create user and config
-RUN groupadd -f -g $GID $USERNAME && useradd -ms /bin/zsh --uid $UID --gid $GID ${USERNAME} && usermod -aG sudo ${USERNAME}
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME
+RUN groupadd -f -g $GID $USERNAME \
+    && useradd -ms /bin/zsh --uid $UID --gid $GID ${USERNAME} \
+    && usermod -aG sudo ${USERNAME} \
+    && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME
 USER $USERNAME
 WORKDIR $HOME
 
 # personal setup
 ENV DOTFILES="$HOME/.dotfiles"
-RUN git clone --recurse-submodules https://github.com/mmngreco/dotfiles $DOTFILES && $DOTFILES/software/all && $DOTFILES/install
+RUN git clone --recurse-submodules https://github.com/mmngreco/dotfiles $DOTFILES \
+    && $DOTFILES/software/all \
+    && $DOTFILES/install \
+    && nvim --headless +PlugInstall +qall \
+    && cd ${HOME}/.local/share/nvim/plugged/telescope-fzf-native.nvim \
+    && make \
+    && ${DOTFILES}/software/pipx
 
 # clean up
-RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN sudo apt-get clean \
+    && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./entrypoint.sh /
 ENTRYPOINT [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
 
+ENV SHELL=zsh
 CMD [ "/bin/zsh", " -i" ]

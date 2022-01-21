@@ -4,6 +4,7 @@
 # https://github.com/docker/cli/blob/master/experimental/README.md#use-docker-experimental
 
 IMAGE_BASE = "continuumio/miniconda3:4.10.3"
+IMAGE_BASE = "ubuntu:20.04"
 IMAGE_NAME = mmngreco
 
 # build only
