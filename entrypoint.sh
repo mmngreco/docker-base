@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
-source ~/.bashrc
+dotfiles pull
+reload
+clear
+
+[ ! -f "/usr/bin/python" ] && sudo ln /usr/bin/python3 /usr/bin/python
 
 case $1 in
+    bash)
+        bash -i
+        ;;
+    zsh)
+        zsh -i
+        ;;
     install)
         pip install . -r requirements.txt -r requirements-test.txt
         ;;
@@ -20,7 +30,7 @@ case $1 in
         echo "    zsh"
         ;;
     *)
-        zsh -i
+        zsh -i -c "$@"
         ;;
 esac
 

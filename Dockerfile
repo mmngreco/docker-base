@@ -52,9 +52,13 @@ RUN git clone --recurse-submodules https://github.com/mmngreco/dotfiles $DOTFILE
     && $DOTFILES/software/all \
     && $DOTFILES/install \
     && nvim --headless +PlugInstall +qall \
-    && cd ${HOME}/.local/share/nvim/plugged/telescope-fzf-native.nvim \
+    && pushd ${HOME}/.local/share/nvim/plugged/telescope-fzf-native.nvim \
     && make \
+    && popd \
+    && ${DOTFILES}/software/pyenv \
     && ${DOTFILES}/software/pipx
+
+
 
 # clean up
 RUN sudo apt-get clean \
@@ -64,4 +68,4 @@ COPY ./entrypoint.sh /
 ENTRYPOINT [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
 
 ENV SHELL=zsh
-CMD [ "/bin/zsh", " -i" ]
+CMD [ "zsh" ]
