@@ -14,9 +14,9 @@ APT_LIST = $(shell cat ./apt.list)
 # run only
 DIR = $(PWD)
 USERNAME = docker
-BASENAME = -$(shell basename ${DIR})
-UUID = -$(shell uuidgen)
-CONTAINER_NAME = $(shell echo mmngreco${BASENAME}${UUID:0:7})
+# BASENAME = -$(shell basename ${DIR})
+# UUID = -$(shell uuidgen)
+# CONTAINER_NAME = $(shell echo mmngreco${BASENAME}${UUID:0:7})
 
 all: build run push
 
